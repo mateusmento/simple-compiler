@@ -1,7 +1,7 @@
 let code = `
-let fullName;
+let fullName = "Hello world";
 class Name {
-	let lastName;
+	let lastName = 12332;
 	let firstName;
 }
 `;
@@ -89,7 +89,7 @@ function parse(tokens) {
 			continue;
 		}
 
-		log(`token not processed: ${token.type}`, token);
+		log(`Unexpected token: ${token.type}`, token);
 		token = token.next;
 	}
 

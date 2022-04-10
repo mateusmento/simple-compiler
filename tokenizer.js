@@ -16,8 +16,6 @@ let guessingBreakerTokens = [
 	{ key: '*', type: 'star' },
 	{ key: '/', type: 'slash' },
 	{ key: '\\', type: 'back_slash' },
-	{ key: "'", type: 'single_quote' },
-	{ key: '"', type: 'double_quote' },
 	{ key: '`', type: 'caret' },
 	{ key: '$', type: 'dolar_sign' },
 	{ key: '=', type: 'equal_sign' },
@@ -28,13 +26,32 @@ let guessingBreakerTokens = [
 function tokenize(code) {
 	let tokens = [];
 	let tokenGuessing = [];
-
+	let isCollectingString = false;
 	let lineNumber = 1;
 	let position = 0;
+
 	for (let i = 0; i < code.length; i++) {
 		var char = code.charAt(i);
 
 		position++;
+
+		if (['"', "'"].includes(char)) {
+			if (['"', "'"].includes(tokenGuessing[0])) {
+				tokenGuessing.push(char);
+				applyGuessing();
+				isCollectingString = false;
+			} else {
+				applyGuessing();
+				tokenGuessing.push(char);
+				isCollectingString = true;
+			}
+			continue;
+		}
+
+		if (isCollectingString) {
+			tokenGuessing.push(char);
+			continue;
+		}
 
 		if (char === '\n') {
 			applyGuessing();
@@ -52,7 +69,7 @@ function tokenize(code) {
 
 		if (guessingBreakerToken) {
 			applyGuessing();
-			tokens.push({ type: guessingBreakerToken.type, lineNumber, position });
+			pushToken({ type: guessingBreakerToken.type });
 			continue;
 		}
 
@@ -62,6 +79,11 @@ function tokenize(code) {
 		}
 
 		if (canBeIdentifier(char)) {
+			tokenGuessing.push(char);
+			continue;
+		}
+
+		if (canBeNumericLiteral(char)) {
 			tokenGuessing.push(char);
 			continue;
 		}
@@ -76,36 +98,58 @@ function tokenize(code) {
 	return tokens;
 
 	function applyGuessing() {
-		let token = tokenGuessing.join('');
+		let token = guess();
 		tokenGuessing = [];
-	
+		if (token) pushToken(token);
+		return token;
+	}
+
+	function guess() {
+		let token = tokenGuessing.join('');	
 		if (isKeyword(token)) {
-			tokens.push({ type: token, lineNumber, position});
-			return;
-		}
-	
-		if (token) {
-			tokens.push({ type: 'identifier', name: token, lineNumber, position});
-			return;
+			return { type: token};
+		} else if (isStringLiteral(token)) {
+			return {type: "string_literal", text: token};
+		} else if (isNumericLiteral(token)) {
+			return {type: "numeric_literal", text: token};
+		} else if (token) {
+			return { type: 'identifier', name: token};
 		}
 	}
-	
+
+	function pushToken(token) {
+		tokens.push({ ...token, lineNumber, position});
+	}
+
 	function isKeyword(token) {
 		return !!token && keywords.some(k => k.startsWith(token));
 	}
-	
+
 	function canBeKeyword(char) {
 		var token = tokenGuessing.join('') + char;
 		return isKeyword(token);
 	}
-	
+
 	function canBeIdentifier(char) {
 		var token = tokenGuessing.join('') + char;
 		return isValidIdentifierToken(token);
 	}
-	
+
 	function isValidIdentifierToken(token) {
 		return /^[_a-zA-Z][_a-zA-Z0-9]*$/.test(token);
+	}
+
+	function isStringLiteral(token) {
+		return /^".*"$|^'.*'$/.test(token);
+	}
+
+	function canBeNumericLiteral(token) {
+		var token = tokenGuessing.join('') + char;
+		return isNumericLiteral(token);
+	}
+
+	function isNumericLiteral(token) {
+		return /^\d+$/.test(token);
 	}
 }
 
