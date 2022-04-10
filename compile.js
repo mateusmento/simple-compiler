@@ -1,7 +1,7 @@
 let code = `
 let fullName = "Hello world";
 class Name {
-	let lastName = 12332;
+	let lastName = 123;
 	let firstName;
 }
 `;
@@ -31,14 +31,12 @@ function parse(tokens) {
 				token = token.next;
 				variable = {type: 'declared_variable', name: token.name}; 
 				if (token.next && token.next.type === "semicolon") {
-					token = token.next.next;
+					token = token.next;
 				} else {
 					log(`Error: missing semicolon after variable identifier`, token);
-					token = token.next;
 				}
 			} else {
 				log(`Error: missing identifier near "let"`, token);
-				token = token.next;
 			}
 		}
 
@@ -59,6 +57,7 @@ function parse(tokens) {
 					let variables = [], variable;
 					while (token.type !== "close_curly_brackets") {
 						[token, variable] = processVariableDeclaration(token);
+						token = token.next;
 						if (variable) variables.push(variable);
 					}
 					token = token.next;
@@ -79,6 +78,7 @@ function parse(tokens) {
 	while (token) {
 		if (token.type === 'let') {
 			[token, variable] = processVariableDeclaration(token);
+			token = token.next;
 			if (variable) ast.push(variable);
 			continue;
 		}
