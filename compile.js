@@ -1,7 +1,7 @@
 let code = `
 class Name {
-	let lastName => "Mateus";
-	let firstName => "Sarmento";
+	let lastName = "Mateus";
+	let firstName = "Sarmento";
 }
 `;
 
