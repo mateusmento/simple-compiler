@@ -68,11 +68,13 @@ function tokenize(code) {
 			continue;
 		}
 
-		let guessingBreakerToken = guessingBreakerTokens.find(token => token.key === char);
+		let wordBreakerToken = wordBreakerTokens.find(token => token.type === code.slice(i, i+token.type.length));
 
-		if (guessingBreakerToken) {
+		if (wordBreakerToken) {
 			applyGuessing();
-			pushToken({ type: guessingBreakerToken.type });
+			i += wordBreakerToken.type.length - 1;
+			position += wordBreakerToken.type.length - 1;
+			pushToken({ type: wordBreakerToken.type });
 			continue;
 		}
 
@@ -112,9 +114,9 @@ function tokenize(code) {
 		if (isKeyword(token)) {
 			return { type: token};
 		} else if (isStringLiteral(token)) {
-			return {type: "string_literal", text: token};
+			return {type: "literal", literalType: "string", text: token};
 		} else if (isNumericLiteral(token)) {
-			return {type: "numeric_literal", text: token};
+			return {type: "literal", literalType: "number", text: token};
 		} else if (token) {
 			return { type: 'identifier', name: token};
 		}
